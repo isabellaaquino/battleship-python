@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List
 
-from tile import Tile, TileStateOptions
+from tile import Tile, TileState
 
 
 class ShipType(Enum):
@@ -25,7 +25,7 @@ class Ship:
     def is_alive(self):
         count = 0
         for tile in self.tiles:
-            if tile.state == TileStateOptions.HIT:
+            if tile.state == TileState.HIT:
                 count +=1
 
         if count == self.get_type().size:

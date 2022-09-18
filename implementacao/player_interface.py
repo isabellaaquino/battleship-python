@@ -77,8 +77,8 @@ class PlayerInterface:
         # self.board_title = Label(self.player_frame, text="A B C D E F G H I J", font="arial 20")
         # self.board_title.grid(row=0, column=0)
         
-        self.message_label = Label(self.title_frame, bg="#D9D9D9", text='BATALHA NAVAL', font=("Gulim", 30))
-        self.message_label.grid(row=0, column=1)
+        self.title_label = Label(self.title_frame, bg="#D9D9D9", text='BATALHA NAVAL', font=("Gulim", 30))
+        self.title_label.grid(row=0, column=1)
 
         # Menu region
 
