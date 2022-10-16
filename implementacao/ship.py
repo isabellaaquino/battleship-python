@@ -5,10 +5,10 @@ from tile import Tile, TileState
 
 
 class ShipType(Enum):
-    PORTA_AVIOES = {'name': 'Porta Aviões', 'size': 5},
-    TESTE = {'name': 'Porta Aviões', 'size': 5},
-    TESTE3 = {'name': 'Porta Aviões', 'size': 5},
-    SUBMARINO = {'name': 'Porta Aviões', 'size': 5},
+    PORTA_AVIOES = 5
+    NAVIOS_TANQUE = 4,
+    CONTRATORPEDEIRO = 3,
+    SUBMARINO = 2,
 
 class Ship:
 
@@ -16,19 +16,21 @@ class Ship:
         self.type = type
         self.tiles = []
 
+    def get_tiles(self) -> List[Tile]:
+        return self.tiles
+
     def set_tiles(self, tiles: List[Tile]) -> None:
         self.tiles = tiles
 
     def get_type(self) -> ShipType:
         return self.type
     
-    def is_alive(self):
-        count = 0
-        for tile in self.tiles:
-            if tile.state == TileState.HIT:
-                count +=1
-
-        if count == self.get_type().size:
+    @property
+    def is_alive(self) -> bool:
+        # Check if all the tiles were hit
+        tiles_states = [tile.state for tile in self.get_tiles()]
+        # The quantity of hit tiles is the same of the ship size
+        if tiles_states.count(TileState.HIT) == self.get_type().value[0]:
             return False
         else:
             return True

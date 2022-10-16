@@ -6,6 +6,9 @@ class Board:
         self.player = player
         self.matrix = tiles
 
+    @staticmethod
+    def get_hidden_board(self):
+        pass
 
 class BoardFactory:
 
