@@ -4,7 +4,7 @@ from ship import Ship
 
 class Player:
 
-    def __init__(self, name: str, ships: List[Ship]) -> None:
-        self.name = name
+    def __init__(self, identifier: str, ships: List[Ship]) -> None:
+        self.identifier = identifier
         self.alive_ships = ships
         

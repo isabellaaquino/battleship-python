@@ -1,10 +1,20 @@
 from tkinter import *
 from tkinter import messagebox
+from tkinter import simpledialog
 
-class PlayerInterface:
+from dog.dog_interface import DogPlayerInterface
+from dog.dog_actor import DogActor
+
+
+class PlayerInterface(DogPlayerInterface):
     def __init__(self):
         self.main_window = Tk() 
         self.fill_main_window()
+
+        player_name = simpledialog.askstring(title="Player identification", prompt="What is your name?")
+        self.dog_server_interface = DogActor()
+        message = self.dog_server_interface.initialize(player_name, self)
+        messagebox.showinfo(message=message)
 
         self.main_window.mainloop() 
 
@@ -30,9 +40,9 @@ class PlayerInterface:
 
         
         # Images region
-        self.water_tile = PhotoImage(file="implementacao/images/tile_water.png")
-        self.key_tiles_image = PhotoImage(file="implementacao/images/key_tiles.png")
-        self.key_ships_image = PhotoImage(file="implementacao/images/key_ships.png")
+        self.water_tile = PhotoImage(file="images/tile_water.png")
+        self.key_tiles_image = PhotoImage(file="images/key_tiles.png")
+        self.key_ships_image = PhotoImage(file="images/key_ships.png")
         #self.logo = PhotoImage(file="implementacao/images/logo.png") 
 
         self.key_tiles = Label(self.keys_frame, bd=0, image=self.key_tiles_image)
@@ -96,11 +106,14 @@ class PlayerInterface:
     def start_match(self):
         answer = messagebox.askyesno('START', 'Are you sure you want to start a match?')
         if(answer):
-            print('start game')
-            # self.menu_file.entryconfigure('restaurar estado inicial', state="normal")
-        else:
-            print('continue game')
-            # self.menu_file.entryconfigure('restaurar estado inicial', state="disabled")
+            start_status = self.dog_server_interface.start_match(2)
+            message = start_status.get_message()
+            messagebox.showinfo(message=message)
+
+    def receive_start(self, start_status):
+        message = start_status.get_message()
+        messagebox.showinfo(message=message)
+
 
     def restart_match(self):
         answer = messagebox.askyesno('START', 'Are you sure you want to restart the match?')
