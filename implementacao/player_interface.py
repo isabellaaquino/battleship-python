@@ -9,6 +9,7 @@ from dog.dog_actor import DogActor
 class PlayerInterface(DogPlayerInterface):
     def __init__(self):
         self.main_window = Tk() 
+        self.selected_tiles = []
         self.fill_main_window()
 
         player_name = simpledialog.askstring(title="Player identification", prompt="What is your name?")
@@ -16,7 +17,7 @@ class PlayerInterface(DogPlayerInterface):
         message = self.dog_server_interface.initialize(player_name, self)
         messagebox.showinfo(message=message)
 
-        self.main_window.mainloop() 
+        self.main_window.mainloop()
 
     def fill_main_window(self):
 
