@@ -13,6 +13,7 @@ class ShipType(Enum):
 class Ship:
 
     def __init__(self, type: ShipType) -> None:
+        self.player = None # Player attribute starts as None because it'll be set in the future after checking if the board is valid
         self.type = type
         self.tiles = []
 
@@ -30,7 +31,5 @@ class Ship:
         # Check if all the tiles were hit
         tiles_states = [tile.state for tile in self.get_tiles()]
         # The quantity of hit tiles is the same of the ship size
-        if tiles_states.count(TileState.HIT) == self.get_type().value[0]:
-            return False
-        else:
-            return True
+        return tiles_states.count(TileState.HIT) != self.get_type().value[0]
+

@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import List
+from board import Board
 
 
 from utils import coord_letters
@@ -33,6 +34,37 @@ class Tile:
     def set_state(self, state: TileState):
         self.state = state
 
+    def right_occupied(self, board: Board) -> bool:
+        matrix = board.get_matrix()
+        try:
+            is_occupied = matrix[self.x][self.y+1].get_state() == TileState.SHIP
+            return is_occupied
+        except IndexError:
+            return False
+    
+    def top_occupied(self, board: Board) -> bool:
+        matrix = board.get_matrix()
+        try:
+            is_occupied = matrix[self.x-1][self.y].get_state() == TileState.SHIP
+            return is_occupied
+        except IndexError:
+            return False
+    
+    def bottom_occupied(self, board: Board) -> bool:
+        matrix = board.get_matrix()
+        try:
+            is_occupied = matrix[self.x+1][self.y].get_state() == TileState.SHIP
+            return is_occupied
+        except IndexError:
+            return False
+
+    def left_occupied(self, board: Board) -> bool:
+        matrix = board.get_matrix()
+        try:
+            is_occupied = matrix[self.x][self.y-1].get_state() == TileState.SHIP
+            return is_occupied
+        except IndexError:
+            return False
 
 class TileFactory:
 
