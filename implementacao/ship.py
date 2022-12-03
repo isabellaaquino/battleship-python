@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import List
-
 from tile import Tile, TileState
 
 
@@ -25,6 +24,9 @@ class Ship:
 
     def get_type(self) -> ShipType:
         return self.type
+
+    def set_player(self, player: 'Player'):
+        self.player = player
     
     @property
     def is_alive(self) -> bool:

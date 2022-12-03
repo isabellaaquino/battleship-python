@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import List
-from board import Board
 
 
 from utils import coord_letters
@@ -34,40 +33,22 @@ class Tile:
     def set_state(self, state: TileState):
         self.state = state
 
-    def right_occupied(self, board: Board) -> bool:
-        matrix = board.get_matrix()
-        try:
-            is_occupied = matrix[self.x][self.y+1].get_state() == TileState.SHIP
-            return is_occupied
-        except IndexError:
-            return False
-    
-    def top_occupied(self, board: Board) -> bool:
-        matrix = board.get_matrix()
-        try:
-            is_occupied = matrix[self.x-1][self.y].get_state() == TileState.SHIP
-            return is_occupied
-        except IndexError:
-            return False
-    
-    def bottom_occupied(self, board: Board) -> bool:
-        matrix = board.get_matrix()
-        try:
-            is_occupied = matrix[self.x+1][self.y].get_state() == TileState.SHIP
-            return is_occupied
-        except IndexError:
-            return False
+    def update_state(self):
+        state = self.state
+        if state == TileState.SHIP:
+            self.state = TileState.HIT
+        elif state == TileState.WATER:
+            self.state = TileState.WATER_MISS
 
-    def left_occupied(self, board: Board) -> bool:
-        matrix = board.get_matrix()
-        try:
-            is_occupied = matrix[self.x][self.y-1].get_state() == TileState.SHIP
-            return is_occupied
-        except IndexError:
-            return False
+    def is_selectable(self):
+        return self.state != TileState.HIT and self.state != TileState.WATER_MISS
 
+    def reset(self):
+        self.state == TileState.WATER
+        
+        
 class TileFactory:
 
     @staticmethod
-    def create() -> List[List[Tile]]:
+    def create() -> List[List['Tile']]:
         return [[Tile(x, y, TileState.WATER) for x in range(0,8)] for y in range(0,8)] 
