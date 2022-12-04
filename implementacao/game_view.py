@@ -8,6 +8,7 @@
 # 7 - match abandoned by opponent
 
 from operator import itemgetter
+from tkinter import messagebox
 from typing import List, Tuple
 from board import Board
 from ship import Ship, ShipType
@@ -15,7 +16,7 @@ from player import Player
 
 
 def is_occupied(tile, selected_tiles: List[tuple]): # Helper function
-    return (tile[0], tile[1]) in selected_tiles
+    return [tile[0], tile[1]] in selected_tiles
 
 class GameView:
     def __init__(self) -> None:
@@ -29,24 +30,87 @@ class GameView:
         self.local_player.initialize(1, "Local Player", "Local Player")
         self.remote_player.initialize(2, "Remote Player", "Remote Player")
 
-        self.remote_board = Board(self.remote_player, 0) # Board ID 0 for remote (opponen) board
+        self.remote_board = Board(self.remote_player, 0) # Board ID 0 for remote (opponenent) board
         self.local_board = Board(self.local_player, 1) # Board ID 1 for local (playing user) board
-        
 
-    def get_match_status() -> int:
-        pass
+
+    def get_match_status(self):
+        return self.match_status 
+
+    def get_status(self) -> str:
+        """	
+        Gameview matchStatus
+
+        1 - no match (initial state)
+        2 - finished match (game with winner)
+        3 - your turn, match in progress AND is setting ships
+        4 - your turn, match in progress AND is select tile
+        5 - NOT your turn, match in progress - waiting ships to be set
+        6 - NOT your turn, match in progress - waiting select tile move
+        7 - match abandoned by opponent
+        """
+        turn_player = self.get_turn_player()
+
+        if self.match_status == 2:
+            return "Vencedor: " + self.get_winner_name()
+        elif self.match_status == 3:
+            return turn_player.get_name() + ", selecione ladrinhos para colocação de navios. Clique em 'Confirmar' quando finalizar."
+        elif self.match_status == 4:
+            return turn_player.get_name() + ", selecione um ladrilho para atirar."
+        elif self.match_status == 5:
+            return "Aguardando colocação de navios do adverário: " + self.remote_player.get_name()
+        elif self.match_status == 5:
+            return "Aguardando lance do adversário: " + self.remote_player.get_name()
+        elif self.match_status == 7:
+            return "Adversário abandonou a partida"
+
+
+    def get_winner_name(self):
+        local_player = self.get_local_player()
+        if local_player.is_winner:
+            return local_player.get_name()
+            
+        return self.get_remote_player().get_name()
 
     def get_remote_board(self):
         return self.remote_board
 
-    def start_match(players, local_player_id):
-        pass
+    def set_match_status(self, status):
+        self.match_status = status
 
-    def receive_withdrawal_notification():
-        pass
+    def start_match(self, players, local_player_id):
+        playerA_name = players[0][0]
+        playerA_id = players[0][1]
+        playerA_order = players[0][2]
+        playerB_name = players[1][0]
+        playerB_id = players[1][1]
+        self.local_player.reset()
+        self.remote_player.reset()
+        self.local_player.initialize(1, playerA_id, playerA_name)
+        self.remote_player.initialize(2, playerB_id, playerB_name)
+        if playerA_order == "1":
+            self.local_player.toggle_turn()
+            self.match_status = 3  #  Waiting for setting ships
+        else:
+            self.remote_player.toggle_turn()
+            self.match_status = 5  #  waiting remote action
+
+    def receive_withdrawal_notification(self):
+        self.set_match_status(6)
     
-    def reset_game():
-        pass
+    def reset_game(self):
+        self.match_status = 1
+        
+        # Creating players
+
+        self.local_player = Player()
+        self.remote_player = Player()
+
+        self.local_player.initialize(1, "Local Player", "Local Player")
+        self.remote_player.initialize(2, "Remote Player", "Remote Player")
+
+        self.remote_board = Board(self.remote_player, 0) # Board ID 0 for remote (opponenent) board
+        self.local_board = Board(self.local_player, 1) # Board ID 1 for local (playing user) board
 
     def get_local_player(self) -> Player:
         return self.local_player
@@ -69,10 +133,10 @@ class GameView:
         else:
             return self.local_player
 
-    def get_local_board(self):
+    def get_local_board(self) -> Board:
         return self.local_board
 
-    def get_remote_board(self):
+    def get_remote_board(self) -> Board:
         return self.remote_board
 
     def is_local_board_id(self, id):
@@ -99,7 +163,7 @@ class GameView:
         return len(selected_tiles) == 16
 
     @staticmethod
-    def are_there_ships_close(selected_tiles: List[tuple]) -> bool:
+    def are_there_ships_close(selected_tiles: List[List[int]]) -> bool:
         """
         This method will check if are there are any ships placed next to each other
         """
@@ -110,34 +174,38 @@ class GameView:
         for i in range(len(selected_tiles)):
             try:
                 current_ship = []
-                x, y = selected_tiles[i]
+                x = selected_tiles[i][0]
+                y = selected_tiles[i][1]
 
-                right_tile = (x+1, y)
-                bottom_tile = (x, y+1)
-
+                right_tile = [x, y+1]
+                bottom_tile = [x+1, y]
 
                 if right_tile in selected_tiles:
                     while is_occupied(right_tile, selected_tiles): # Checking if the ship was horizontally placed
-                        bottom_tile = (right_tile[0], right_tile[1]+1)
+                        bottom_tile = [right_tile[0]+1, right_tile[1]]
                         if is_occupied(bottom_tile, selected_tiles):
                             return True # There are ships close
                         current_ship.append((right_tile))
 
-                        right_tile = (right_tile[0]+1, right_tile[1]) # Gets the next bottom tile
-                        if not is_occupied(right_tile, selected_tiles): # If the next tile is not occupied, break the ship loop
-                            selected_tiles.remove(tile for tile in current_ship) # Removes the tile so we don't have to do the verification again on the closing loop
+                        right_tile = [right_tile[0], right_tile[1]+1] # Gets the next bottom tile
+                        if not is_occupied(right_tile, selected_tiles):# If the next tile is not occupied, break the ship loop 
+                            current_ship.append((right_tile)) 
+                            for tile in current_ship:
+                                selected_tiles.remove(tile) # Removes the tile so we don't have to do the verification again on the closing loop
                             break
 
                 elif bottom_tile in selected_tiles:
                     while is_occupied(bottom_tile, selected_tiles): # Checking if the ship was horizontally placed
-                        right_tile = (bottom_tile[0]+1, bottom_tile[1])
+                        right_tile = [bottom_tile[0], bottom_tile[1]+1]
                         if is_occupied(right_tile, selected_tiles):
                             return True # There are ships close
-                        current_ship.append((right_tile))
+                        current_ship.append((bottom_tile))
                         
-                        bottom_tile = (bottom_tile[0], bottom_tile[1]+1) # Gets the next bottom tile
-                        if not is_occupied(bottom_tile, selected_tiles): # If the next tile is not occupied, break the ship loop
-                            selected_tiles.remove(tile for tile in current_ship) # Removes the tile so we don't have to do the verification again on the closing loop
+                        bottom_tile = [bottom_tile[0]+1, bottom_tile[1]] # Gets the next bottom tile
+                        if not is_occupied(bottom_tile, selected_tiles):
+                            current_ship.append((bottom_tile)) # If the next tile is not occupied, break the ship loop
+                            for tile in current_ship:
+                                selected_tiles.remove(tile) # Removes the tile so we don't have to do the verification again on the closing loop
                             break
 
                 else: # Single ship tile, therefore invalid
@@ -170,10 +238,10 @@ class GameView:
             current_ship = []
             try:
                 x, y = selected_tiles[i]
-                current_ship.append((x,y))
+                current_ship.append([x,y])
 
-                right_tile = (x+1, y)
-                bottom_tile = (x, y+1)
+                right_tile = [x, y+1]
+                bottom_tile = [x+1, y]
 
                 """
                 Since there are no ships close (as checked previously),
@@ -197,12 +265,13 @@ class GameView:
                     current_ship.append((current_tile)) # Appends the chain of tiles to the current ship
                     
                     if direction == 'right':
-                        current_tile = (current_tile[0]+1, current_tile[1]) # Gets the next right tile
+                        current_tile = [current_tile[0], current_tile[1]+1] # Gets the next right tile
                     else:
-                        current_tile = (current_tile[0], current_tile[1]+1) # Gets the next bottom tile
+                        current_tile = [current_tile[0]+1, current_tile[1]] # Gets the next bottom tile
 
                     if not is_occupied(current_tile, selected_tiles): # If the next tile is not occupied, it means the ship ended
-                        selected_tiles.remove(tile for tile in current_ship) # Removes the tiles so we don't have to do the verification again on the closing loop
+                        for tile in current_ship:
+                            selected_tiles.remove(tile) # Removes the tiles so we don't have to do the verification again on the closing loop
                         ships.append(current_ship)
                         break
             
@@ -247,5 +316,18 @@ class GameView:
             player.set_as_winner()
             return True
     
+    def reset_game(self):
+        self.match_status = 1
+        
+        # Creating players
+
+        self.local_player = Player()
+        self.remote_player = Player()
+
+        self.local_player.initialize(1, "Local Player", "Local Player")
+        self.remote_player.initialize(2, "Remote Player", "Remote Player")
+
+        self.remote_board = Board(self.remote_player, 0) # Board ID 0 for remote (opponen) board
+        self.local_board = Board(self.local_player, 1) # Board ID 1 for local (playing user) board
 
         

@@ -14,7 +14,7 @@ class Board:
     def get_id(self):
         return self.id
 
-    def get_matrix(self) -> List[Tile]:
+    def get_matrix(self) -> List[List[Tile]]:
         return self.matrix
 
     def get_tile(self, x, y) -> Tile:
@@ -23,7 +23,7 @@ class Board:
     def get_player(self):
         return self.player
 
-    def create_ships(self, instantiated_ships: List[Tuple[Ship, List[int]]]):
+    def create_ships(self, instantiated_ships: List[Tuple[Ship, List[List[int]]]]):
         for i in range(len(instantiated_ships)):
             ship = instantiated_ships[i][0]
             ship.set_player(self.get_player())
