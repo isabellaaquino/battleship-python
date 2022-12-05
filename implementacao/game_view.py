@@ -54,11 +54,11 @@ class GameView:
         if self.match_status == 2:
             return "Vencedor: " + self.get_winner_name()
         elif self.match_status == 3:
-            return turn_player.get_name() + ", selecione ladrinhos para colocação de navios. Clique em 'Confirmar' quando finalizar."
+            return turn_player.get_name() + ", selecione ladrinhos para colocação de navios. Clique em 'Confirmar navios' quando finalizar."
         elif self.match_status == 4:
             return turn_player.get_name() + ", selecione um ladrilho para atirar."
         elif self.match_status == 5:
-            return "Aguardando colocação de navios do adverário: " + self.remote_player.get_name()
+            return "Aguardando colocação de navios do adversário: " + self.remote_player.get_name()
         elif self.match_status == 6:
             return "Aguardando tiro do adversário: " + self.remote_player.get_name()
         elif self.match_status == 7:
@@ -96,7 +96,7 @@ class GameView:
             self.match_status = 5  #  waiting remote action
 
     def receive_withdrawal_notification(self):
-        self.set_match_status(6)
+        self.match_status = 7
     
     def reset_game(self):
         self.match_status = 1
@@ -306,14 +306,14 @@ class GameView:
 
 
     def evaluate_end_of_match(self) -> bool:
+        turn_player = self.get_local_player()
         player = self.get_receiving_move_player()
         ships = player.get_ships()
 
-        print([ship.is_alive for ship in ships])
         if any([ship.is_alive for ship in ships]):
             return False
         else:
-            player.set_as_winner()
+            turn_player.set_as_winner()
             return True
     
     def reset_game(self):

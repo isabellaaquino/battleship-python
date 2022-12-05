@@ -12,7 +12,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "cwd": "dev/batalha-naval/implementacao"
+            "cwd": "dev/batalha-naval/implementacao",
         }
     ]
 }

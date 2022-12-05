@@ -30,16 +30,10 @@ class Player:
     def get_turn(self) -> bool:
         return self.is_turn
 
-    def get_is_winner(self) -> bool:
-        return self.is_winner
-
-    def get_identifier(self):
-        return self.identifier
-
-    def get_name(self):
+    def get_name(self) -> str:
         return self.name
 
-    def get_symbol(self):
+    def get_symbol(self) -> str:
         return self.symbol
 
     def toggle_turn(self):

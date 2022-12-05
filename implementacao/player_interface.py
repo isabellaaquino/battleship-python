@@ -44,11 +44,12 @@ class PlayerInterface(DogPlayerInterface):
         self.enemy_frame = Frame(self.main_window, padx=240, pady=50, bg="#D9D9D9")
         self.enemy_frame.grid(row=2, column=0)
 
+        
+        self.confirm_frame = Frame(self.main_window, padx=240, pady=50, bg="#D9D9D9")
+        self.confirm_frame.grid(row=3, column=0)
+
         self.title_frame = Frame(self.main_window, padx=0, pady=10, bg="#D9D9D9")
         self.title_frame.grid(row=0, column=0)
-
-        self.confirm_frame = Frame(self.main_window, padx=100, pady=700, bg="#D9D9D9")
-        self.confirm_frame.grid(row=3, column=0)
 
         
         # Images region
@@ -78,6 +79,10 @@ class PlayerInterface(DogPlayerInterface):
         self.title_label = Label(self.title_frame, bg="#D9D9D9", text='BATALHA NAVAL', font=("Gulim", 30))
         self.title_label.grid(row=0, column=1)
 
+        self.confirm_button = Label(self.title_frame, text='Confirmar navios', bg="#FFFFFF", font=("Gulim", 12), borderwidth=2,
+        state="disabled")
+        self.confirm_button.grid(row=0, column=2, padx=100)
+
         # Confirm button 
 
         #self.confirm_button = Button(self.confirm_frame, text='Confirmar', command=self.set_ships)
@@ -89,19 +94,11 @@ class PlayerInterface(DogPlayerInterface):
         self.main_window["menu"] = self.menubar
 
         self.menu_file = Menu(self.menubar)
-        self.menubar.add_cascade(menu=self.menu_file, label="File")
+        self.menubar.add_cascade(menu=self.menu_file, label="Início")
 
         # Itens menu:
         self.menu_file.add_command(label="Iniciar jogo", command=self.start_match) 
-        self.menu_file.add_command(label="Recomeçar jogo", command=self.restart_match)
-
-        
-
-        self.confirm_button = Label(self.confirm_frame, text='Confirmar navios', bg="#A9A9A9", font=("Gulim", 30))
-        self.confirm_button.grid(row=0, column=0)
-        self.confirm_button.bind(
-                    "<Button-1>", lambda event: self.set_ships()
-                )
+        self.menu_file.add_command(label="Recomeçar jogo", command=self.reset_game)
 
         self.update_gui()
 
@@ -135,14 +132,14 @@ class PlayerInterface(DogPlayerInterface):
                     messagebox.showinfo(message=start_status.get_message())
                     self.update_gui()
 
-    def restart_match(self):
+    def reset_game(self):
         match_status = self.gameview.get_match_status()
         if match_status == 2 or match_status == 6:
             self.gameview.reset_game()
             self.update_gui()
 
     def receive_start(self, start_status):
-        self.restart_match()  #    use case reset game
+        self.reset_game()  #    use case reset game
         players = start_status.get_players()
         local_player_id = start_status.get_local_id()
         self.gameview.start_match(players, local_player_id)
@@ -154,7 +151,6 @@ class PlayerInterface(DogPlayerInterface):
 
     def reset_selected_tiles(self):
         self.selected_tiles = []
-        self.update_gui()
 
     def set_selected_tile(self, x, y):
         coords = [x,y]
@@ -163,7 +159,7 @@ class PlayerInterface(DogPlayerInterface):
         else:
             self.selected_tiles.remove(coords)
 
-    def select_tile(self, event, board_id, line, column):
+    def select_tile(self, board_id, line, column):
         """
         USE CASE SELECT TILE
         """
@@ -205,6 +201,7 @@ class PlayerInterface(DogPlayerInterface):
                 is_winner = self.gameview.evaluate_end_of_match()
 
                 if not is_winner:
+                    self.gameview.local_player.toggle_turn()
                     self.gameview.remote_player.toggle_turn()
                     self.gameview.set_match_status(6) # Waiting for remote select tile move
                     status = 'next'
@@ -213,7 +210,7 @@ class PlayerInterface(DogPlayerInterface):
                     self.gameview.local_player.toggle_turn() # removes turn from current player
                     status = 'finished'
             else:
-                self.gameview.set_match_status(2) # There is a winner
+                messagebox.showinfo(message=f'Você clicou num ladrinho já selecionado anteriormente. Para realizar um tiro, selecione um ladrilho válido.')
                 return
 
             self.dog_server_interface.send_move({'coord_x': line, 'coord_y': column, 'is_winner': is_winner, 'match_status': status})
@@ -229,12 +226,13 @@ class PlayerInterface(DogPlayerInterface):
         if not game_view.is_tiles_sum_valid(self.selected_tiles):
             messagebox.showinfo('Jogada Inválida', message='O número de tiles selecionados é inválido. Por favor tente novamente.')
             self.reset_selected_tiles()
+            self.update_gui()
             return
             
-
         if game_view.are_there_ships_close(self.selected_tiles):
             messagebox.showinfo('Jogada Inválida', message='Existem navios adjacentes ou ladrilhos solitários. Por favor tente novamente.')
             self.reset_selected_tiles()
+            self.update_gui()
             return
 
         all_ships_placed, ship_tiles = game_view.are_all_ships_placed(self.selected_tiles)
@@ -245,7 +243,6 @@ class PlayerInterface(DogPlayerInterface):
 
             if game_view.get_remote_player().get_ships() == []: # remote player haven't set their ships yet
                 self.gameview.set_match_status(5) # Wait for remote select tile move
-                self.update_gui()
 
             else:
                 self.gameview.set_match_status(6) # Wait for remote select tile move
@@ -255,11 +252,13 @@ class PlayerInterface(DogPlayerInterface):
 
             self.reset_selected_tiles()
 
+            self.update_gui()
+
             self.dog_server_interface.send_move({'ships': ship_tiles, 'match_status': 'next'})
             return
 
         else:
-            messagebox.showinfo('Jogada Inválida', message='Você não seleciou todos os tipos de navios necessários.'
+            messagebox.showinfo('Jogada Inválida', message='Você não selecimou todos os tipos de navios necessários.'
             'Por favor tente novamente. Dica: Siga a legenda de navios requeridos.')
             self.reset_selected_tiles()
             self.update_gui()
@@ -288,6 +287,8 @@ class PlayerInterface(DogPlayerInterface):
                 game_view.set_match_status(3) # Local player turn to set ships
             else:
                 game_view.set_match_status(4)
+            game_view.get_local_player().toggle_turn()
+            game_view.get_remote_player().toggle_turn()
 
         elif match_status == 6:
             x, y = move_to_send['coord_x'], move_to_send['coord_y']
@@ -299,16 +300,16 @@ class PlayerInterface(DogPlayerInterface):
                 remote_player = game_view.get_remote_player()
                 remote_player.set_as_winner()
                 game_view.set_match_status(2)
-            else:
-                game_view.set_match_status(4) # Local player turn to select tiles
 
-        game_view.get_local_player().toggle_turn()
-        game_view.get_remote_player().toggle_turn()
+            else:
+                game_view.set_match_status(4)
+                game_view.get_local_player().toggle_turn()
+                game_view.get_remote_player().toggle_turn() # Local player turn to select tiles
 
         self.update_gui()
 
     def update_gui(self):
-        self.update_menu_status()
+        self.update_button_status()
         # Resets both boards
         self.board_view = []
 
@@ -321,7 +322,7 @@ class PlayerInterface(DogPlayerInterface):
                 player_tile = Label(self.player_frame, bd = 0, image=self.get_tile_image(remote_tile.get_state(), remote=True))
                 player_tile.grid(row=x, column=y)
                 player_tile.bind(
-                    "<Button-1>", lambda event, a_line=x, a_column=y: self.select_tile(event, 0, a_line, a_column)
+                    "<Button-1>", lambda event, a_line=x, a_column=y: self.select_tile(0, a_line, a_column)
                 )
                 remote_board.append(player_tile)
             self.board_view.append(remote_board)
@@ -339,7 +340,7 @@ class PlayerInterface(DogPlayerInterface):
                     enemy_tile = Label(self.enemy_frame, bd = 0, image=self.get_tile_image(local_tile.get_state(), remote=False))
                 enemy_tile.grid(row=x, column=y)
                 enemy_tile.bind(
-                    "<Button-1>", lambda event, a_line=x, a_column=y: self.select_tile(event, 1, a_line, a_column)
+                    "<Button-1>", lambda event, a_line=x, a_column=y: self.select_tile(1, a_line, a_column)
                 )
                 local_board.append(enemy_tile)
             self.board_view.append(local_board)
@@ -348,8 +349,15 @@ class PlayerInterface(DogPlayerInterface):
         if message and not self.started_selecting:
             messagebox.showinfo(message=message)
 
-    def update_menu_status(self):
+    def update_button_status(self):
         match_status = self.gameview.get_match_status()
+        if match_status == 3:
+            self.confirm_button.configure(state="normal")
+            self.confirm_button.bind("<Button-1>", lambda event: self.set_ships())
+
+        else:
+            self.confirm_button.configure(state="disabled")
+        
         if match_status == 2 or match_status == 6:
             self.menu_file.entryconfigure("Recomeçar jogo", state="normal")
         else:
