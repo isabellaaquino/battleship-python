@@ -5,9 +5,9 @@ from tile import Tile, TileState
 
 class ShipType(Enum):
     PORTA_AVIOES = 5
-    NAVIOS_TANQUE = 4,
-    CONTRATORPEDEIRO = 3,
-    SUBMARINO = 2,
+    NAVIOS_TANQUE = 4
+    CONTRATORPEDEIRO = 3
+    SUBMARINO = 2
 
 class Ship:
 
@@ -31,7 +31,7 @@ class Ship:
     @property
     def is_alive(self) -> bool:
         # Check if all the tiles were hit
-        tiles_states = [tile.state for tile in self.get_tiles()]
+        tiles_states = [tile.get_state().name for tile in self.get_tiles()]
         # The quantity of hit tiles is the same of the ship size
-        return tiles_states.count(TileState.HIT) != self.get_type().value[0]
+        return tiles_states.count(TileState.HIT.name) != ShipType[self.get_type()].value
 

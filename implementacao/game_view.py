@@ -59,8 +59,8 @@ class GameView:
             return turn_player.get_name() + ", selecione um ladrilho para atirar."
         elif self.match_status == 5:
             return "Aguardando colocação de navios do adverário: " + self.remote_player.get_name()
-        elif self.match_status == 5:
-            return "Aguardando lance do adversário: " + self.remote_player.get_name()
+        elif self.match_status == 6:
+            return "Aguardando tiro do adversário: " + self.remote_player.get_name()
         elif self.match_status == 7:
             return "Adversário abandonou a partida"
 
@@ -128,7 +128,7 @@ class GameView:
             return self.remote_player
 
     def get_receiving_move_player(self) -> Player:
-        if self.get_local_player.get_turn():
+        if self.get_local_player().get_turn():
             return self.remote_player
         else:
             return self.local_player
@@ -174,13 +174,14 @@ class GameView:
         for i in range(len(selected_tiles)):
             try:
                 current_ship = []
-                x = selected_tiles[i][0]
-                y = selected_tiles[i][1]
+                x = selected_tiles[0][0]
+                y = selected_tiles[0][1]
 
                 right_tile = [x, y+1]
                 bottom_tile = [x+1, y]
 
                 if right_tile in selected_tiles:
+                    current_ship.append([x,y]) 
                     while is_occupied(right_tile, selected_tiles): # Checking if the ship was horizontally placed
                         bottom_tile = [right_tile[0]+1, right_tile[1]]
                         if is_occupied(bottom_tile, selected_tiles):
@@ -189,12 +190,12 @@ class GameView:
 
                         right_tile = [right_tile[0], right_tile[1]+1] # Gets the next bottom tile
                         if not is_occupied(right_tile, selected_tiles):# If the next tile is not occupied, break the ship loop 
-                            current_ship.append((right_tile)) 
                             for tile in current_ship:
                                 selected_tiles.remove(tile) # Removes the tile so we don't have to do the verification again on the closing loop
                             break
 
                 elif bottom_tile in selected_tiles:
+                    current_ship.append([x,y]) 
                     while is_occupied(bottom_tile, selected_tiles): # Checking if the ship was horizontally placed
                         right_tile = [bottom_tile[0], bottom_tile[1]+1]
                         if is_occupied(right_tile, selected_tiles):
@@ -202,8 +203,7 @@ class GameView:
                         current_ship.append((bottom_tile))
                         
                         bottom_tile = [bottom_tile[0]+1, bottom_tile[1]] # Gets the next bottom tile
-                        if not is_occupied(bottom_tile, selected_tiles):
-                            current_ship.append((bottom_tile)) # If the next tile is not occupied, break the ship loop
+                        if not is_occupied(bottom_tile, selected_tiles): # If the next tile is not occupied, break the ship loop
                             for tile in current_ship:
                                 selected_tiles.remove(tile) # Removes the tile so we don't have to do the verification again on the closing loop
                             break
@@ -237,7 +237,8 @@ class GameView:
         for i in range(len(selected_tiles)):
             current_ship = []
             try:
-                x, y = selected_tiles[i]
+                x = selected_tiles[0][0]
+                y = selected_tiles[0][1]
                 current_ship.append([x,y])
 
                 right_tile = [x, y+1]
@@ -261,7 +262,7 @@ class GameView:
                 while is_occupied(current_tile, selected_tiles): # Checking if the ship was horizontally placed
                     count += 1
                     if count > 5:
-                        return False # If the count surpasses 5, it means there is a ship longer than 5, which doesn't exist
+                        return False, None # If the count surpasses 5, it means there is a ship longer than 5, which doesn't exist
                     current_ship.append((current_tile)) # Appends the chain of tiles to the current ship
                     
                     if direction == 'right':
@@ -269,7 +270,7 @@ class GameView:
                     else:
                         current_tile = [current_tile[0]+1, current_tile[1]] # Gets the next bottom tile
 
-                    if not is_occupied(current_tile, selected_tiles): # If the next tile is not occupied, it means the ship ended
+                    if not is_occupied(current_tile, selected_tiles):  # If the next tile is not occupied, it means the ship ended
                         for tile in current_ship:
                             selected_tiles.remove(tile) # Removes the tiles so we don't have to do the verification again on the closing loop
                         ships.append(current_ship)
@@ -278,7 +279,6 @@ class GameView:
             except IndexError: 
                 break
 
-        instantiated_ships = [] # To be reused on creating ships if they are valid
         ships_types = []
         for ship in ships:
             ship_type = ShipType(len(ship)).name
@@ -287,30 +287,30 @@ class GameView:
             we append a tuple of the instance of the ship and the list of tiles coordinates
             that belong to it, so it can be retrieved later by the board.
             """
-            instantiated_ships.append((Ship(ship_type), ship)) 
             ships_types.append(ship_type)
 
         # Checking count of each ship type:
-        if ships_types.count(ShipType.SUBMARINO) != 2:
+        if ships_types.count(ShipType.SUBMARINO.name) != 2:
             return False, None
 
-        if ships_types.count(ShipType.CONTRATORPEDEIRO) != 1:
+        if ships_types.count(ShipType.CONTRATORPEDEIRO.name) != 1:
             return False, None
 
-        if ships_types.count(ShipType.NAVIOS_TANQUE) != 1:
+        if ships_types.count(ShipType.NAVIOS_TANQUE.name) != 1:
             return False, None
 
-        if ships_types.count(ShipType.PORTA_AVIOES) != 1:
+        if ships_types.count(ShipType.PORTA_AVIOES.name) != 1:
             return False, None
 
-        return True, instantiated_ships # Tuple return so we can get the instantiated ships by the board
+        return True, ships # Tuple return so we can get the instantiated ships by the board
 
 
     def evaluate_end_of_match(self) -> bool:
         player = self.get_receiving_move_player()
         ships = player.get_ships()
 
-        if any(ship.is_alive for ship in ships):
+        print([ship.is_alive for ship in ships])
+        if any([ship.is_alive for ship in ships]):
             return False
         else:
             player.set_as_winner()

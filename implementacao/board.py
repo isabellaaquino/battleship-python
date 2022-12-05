@@ -23,17 +23,21 @@ class Board:
     def get_player(self):
         return self.player
 
-    def create_ships(self, instantiated_ships: List[Tuple[Ship, List[List[int]]]]):
-        for i in range(len(instantiated_ships)):
-            ship = instantiated_ships[i][0]
-            ship.set_player(self.get_player())
-            tiles_coords = instantiated_ships[i][1]
+    def create_ships(self, ship_tiles: List[List[int]]):
+        instantiated_ships = []
+        for ship in ship_tiles:
+            ship_type = ShipType(len(ship)).name
+            ship_instance = Ship(ship_type)
+            instantiated_ships.append(ship_instance)
+            ship_instance.set_player(self.get_player())
             tiles = []
-            for coord in tiles_coords:
+            for coord in ship:
                 tile = self.get_tile(coord[0], coord[1])
-                tile.update_status(TileState.SHIP)
+                tile.set_state(TileState.SHIP)
                 tiles.append(tile)
-            ship.set_tiles(tiles)
+            ship_instance.set_tiles(tiles)
+
+        self.get_player().set_ships(instantiated_ships)
 
 
 """

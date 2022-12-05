@@ -24,6 +24,9 @@ class Player:
     def get_ships(self) -> List[Ship]:
         return self.ships
 
+    def set_ships(self, ships: List[Ship]):
+        self.ships = ships
+
     def get_turn(self) -> bool:
         return self.is_turn
 
